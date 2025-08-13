@@ -1,0 +1,4 @@
+psql:
+  dsn: postgres://postgres:password@localhost:10015/iiotdb?sslmode=disable
+  driver: github.com/jackc/pgx/v5/stdlib
+  output: "internal/models"

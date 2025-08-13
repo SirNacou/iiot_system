@@ -1,0 +1,122 @@
+services:
+  backend:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    container_name: backend
+    hostname: backend
+    ports:
+      - 10011
+    depends_on:
+      - kafka
+      - timescaledb
+    env_file:
+      - .env
+    environment:
+      PORT: 10011
+    restart: on-failure
+
+  timescaledb:
+    image: timescale/timescaledb-ha:pg17
+    container_name: timescaledb
+    hostname: timescaledb
+    env_file: .env
+    ports:
+      - "10015:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d iiotdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres-data:/home/postgres/pgdata/data
+    restart: always
+
+  dbmate:
+    image: ghcr.io/amacneil/dbmate:main
+    profiles:
+      - "migrate"
+    container_name: dbmate
+    env_file:
+      - .env
+    volumes:
+      - ./backend/migrations:/db/migrations
+    # command: ["--wait", "up"]
+    # command: ["--wait", "--url", "${DATABASE_URL}", "down"]
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+
+  adminer:
+    image: adminer:5
+    container_name: adminer
+    env_file:
+      - .env
+    ports:
+      - 10020:8080
+    restart: always
+
+  kafka:
+    image: confluentinc/cp-kafka:8.0.0
+    container_name: kafka
+    hostname: kafka
+    env_file: .env
+    # ports:
+    #   - "10005:9101"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    restart: always
+
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest # <--- THE CRITICAL CHANGE HERE
+    container_name: kafka-ui
+    env_file: .env
+    ports:
+      - "10006:8080"
+    depends_on:
+      - kafka
+    restart: always
+
+  emqx:
+    container_name: emqx
+    image: emqx/emqx-enterprise:5.10
+    ports:
+      - "10000:1883" # TCP
+      - "10001:8083" # WS
+      - "10002:8084" # WSS
+      - "10003:8883" # TLS
+      - "10004:18083" # Dashboard
+    env_file: .env
+    volumes:
+      - ./emqx_broker/emqx.conf:/opt/emqx/etc/emqx.conf:ro # Cấu hình EMQX
+      # - ./emqx_broker/certs:/opt/emqx/certs:ro
+      - emqx-data:/opt/emqx/data
+      - emqx-log:/opt/emqx/log
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:18083/status || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - kafka
+
+  device_simulator:
+    build:
+      context: ./device_simulator
+      dockerfile: Dockerfile
+    container_name: device_simulator
+    env_file:
+      - .env
+    volumes:
+      - ./emqx_broker/certs:/app/emqx_broker/certs:ro
+    restart: unless-stopped
+    depends_on:
+      emqx:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  kafka-data:
+  emqx-data:
+  emqx-log:
