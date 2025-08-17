@@ -58,23 +58,34 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:8.0.0
-    container_name: kafka
     hostname: kafka
-    env_file: .env
-    # ports:
-    #   - "10005:9101"
+    container_name: kafka
+    ports:
+      - "10006:9092"
+      - "10007:9101" # JMX port for monitoring
     volumes:
       - kafka-data:/var/lib/kafka/data
-    restart: always
+    env_file: .env
+
+    healthcheck:
+      test:
+        ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   kafka-ui:
-    image: ghcr.io/kafbat/kafka-ui:latest # <--- THE CRITICAL CHANGE HERE
+    image: ghcr.io/kafbat/kafka-ui:v1.3.0
     container_name: kafka-ui
     env_file: .env
     ports:
-      - "10006:8080"
+      - "10008:8080"
+    volumes:
+      - ./kui/config.yml:/etc/kafkaui/dynamic_config.yml
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     restart: always
 
   emqx:
