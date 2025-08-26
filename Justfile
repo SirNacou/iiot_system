@@ -11,10 +11,6 @@ default:
 dbmate *ARG:
   docker run --rm -it --network=host -v "$(pwd)/db:/db" ghcr.io/amacneil/dbmate {{ARG}} -d "./backend/migrations/"
   
-# Gen code from db
-bob-gen:
-  # With configuration file
-  go run github.com/stephenafamo/bob/gen/bobgen-psql@latest -c ./backend/bob.yaml
   
 up:
   docker compose up -d --build

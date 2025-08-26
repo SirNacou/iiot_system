@@ -6,16 +6,15 @@ require (
 	github.com/IBM/sarama v1.45.2
 	github.com/ThreeDotsLabs/watermill v1.4.7
 	github.com/ThreeDotsLabs/watermill-kafka/v3 v3.0.6
+	github.com/aarondl/opt v0.0.0-20250607033636-982744e1bd65
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/jaswdr/faker/v2 v2.8.0
 	github.com/shopspring/decimal v1.4.0
-	github.com/stephenafamo/bob v0.38.0
+	github.com/stephenafamo/bob v0.40.2
 	github.com/twmb/franz-go v1.19.5
 )
 
 require (
-	github.com/aarondl/json v0.0.0-20221020222930-8b0db17ef1bf // indirect
-	github.com/aarondl/opt v0.0.0-20230114172057-b91f370c41f0 // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dnwe/otelsarama v0.0.0-20240308230250-9388d9d40bc0 // indirect
@@ -45,7 +44,7 @@ require (
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/sony/gobreaker v1.0.0 // indirect
-	github.com/stephenafamo/scan v0.6.2 // indirect
+	github.com/stephenafamo/scan v0.7.0 // indirect
 	github.com/twmb/franz-go/pkg/kmsg v1.11.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/otel v1.37.0 // indirect

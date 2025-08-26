@@ -1,0 +1,7 @@
+set windows-shell := ["powershell"]
+set shell := ["bash", "-c"]
+
+# Gen code from db
+bob-gen:
+  # With configuration file
+  go run github.com/stephenafamo/bob/gen/bobgen-psql@latest -c .\bob.yaml

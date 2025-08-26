@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
+	iot_application "iiot_system/backend/internal/application/iot"
 	"iiot_system/backend/internal/infrastructure/configs"
 	"iiot_system/backend/internal/presentation/iot"
 
@@ -20,28 +22,48 @@ import (
 	"github.com/stephenafamo/bob"
 )
 
-var logger = watermill.NewStdLogger(false, false)
+var (
+	logger         = watermill.NewStdLogger(false, false)
+	alertsTopic    = "iiot.alerts"
+	telemetryTopic = "iiot.telemetry"
+)
 
 func main() {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
-
 	defer cancel()
 
 	cfg := configs.LoadConfig()
 
-	dbpool, err := pgxpool.New(ctx, cfg.DatabaseURL)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
-		os.Exit(1)
+	var db bob.DB
+	{
+		dbpool, err := pgxpool.New(ctx, cfg.DatabaseURL)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
+			os.Exit(1)
+		}
+		defer dbpool.Close()
+		db = bob.NewDB(stdlib.OpenDBFromPool(dbpool))
 	}
-	defer dbpool.Close()
-	db := bob.NewDB(stdlib.OpenDBFromPool(dbpool))
 	defer db.Close()
 
-	// cl, err := kgo.NewClient()
-	// cl.LeaveGroup()
-	// defer cl.Close()
+	insertAlertsHandler := iot_application.NewIiotAlertsCommandHandler(db)
+
+	seeds := []string{cfg.KafkaBroker}
+	var wg sync.WaitGroup
+
+	iiotAlertsConsumer, err := iot.NewIiotAlertConsumer(insertAlertsHandler, seeds, cfg.KafkaGroupID, alertsTopic)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to create IIoT alerts consumer: %v\n", err)
+		os.Exit(1)
+	}
+	defer iiotAlertsConsumer.Close()
+
+	wg.Add(1)
+	go iiotAlertsConsumer.Start(ctx, &wg)
+
+	<-ctx.Done()
+	wg.Wait()
 
 	saramaSubscriberConfig := kafka.DefaultSaramaSubscriberConfig()
 	saramaSubscriberConfig.Consumer.Offsets.Initial = sarama.OffsetOldest
@@ -81,7 +103,7 @@ func main() {
 	OeeAlertsConsumer := iot.NewOeeAlertConsumer(logger)
 	router.AddNoPublisherHandler(
 		"save_oee_alerts",
-		"oee.alerts",
+		"iiot.alerts",
 		subscriber,
 		OeeAlertsConsumer.Handle,
 	)
