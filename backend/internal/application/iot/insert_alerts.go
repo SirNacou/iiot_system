@@ -2,14 +2,15 @@ package iot
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"iiot_system/backend/gen/models"
 
 	"github.com/aarondl/opt/null"
-	"github.com/shopspring/decimal"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
+	"github.com/stephenafamo/bob/dialect/psql/dialect"
 	"github.com/stephenafamo/bob/dialect/psql/im"
 )
 
@@ -19,7 +20,7 @@ type InsertAlertsCommand struct {
 	AlertType    string
 	Severity     string
 	Message      string
-	CurrentValue null.Val[decimal.Decimal]
+	CurrentValue null.Val[float64]
 }
 
 type InsertAlertsCommandHandler struct {
@@ -46,23 +47,50 @@ func (h InsertAlertsCommandHandler) Handle(ctx context.Context, command ...Inser
 	)
 
 	for _, v := range command {
-		value := im.Values(
-			psql.Quote(v.Time.String()),
-			psql.Quote(v.DeviceID),
-			psql.Quote(v.AlertType),
-			psql.Quote(v.Severity),
-			psql.Quote(v.Message),
-			psql.Quote(v.CurrentValue.GetOrZero().String()),
-		)
+		val, exist := v.CurrentValue.Get()
+
+		var value bob.Mod[*dialect.InsertQuery]
+		if exist {
+			value = im.Values(
+				psql.Arg(v.Time,
+					v.DeviceID,
+					v.AlertType,
+					v.Severity,
+					v.Message,
+					val),
+			)
+		} else {
+			value = im.Values(
+				psql.Arg(v.Time,
+					v.DeviceID,
+					v.AlertType,
+					v.Severity,
+					v.Message,
+					nil),
+			)
+		}
 
 		q.Apply(value)
 	}
 
-	s, _, err := q.Build(ctx)
+	query, args, err := q.Build(ctx)
 	if err != nil {
 		return err
 	}
-	_, err = t.ExecContext(ctx, s)
+
+	r, err := t.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+
+	t.Commit(ctx)
+
+	row, err := r.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Executed query: %s with args: %v, row: %v\n", query, args, row)
 
 	return err
 }

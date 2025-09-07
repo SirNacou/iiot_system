@@ -2,16 +2,36 @@ package iot
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"iiot_system/backend/internal/application/iot"
 	"sync"
 	"time"
 
+	"iiot_system/backend/internal/application/iot"
+
+	"github.com/aarondl/opt/null"
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
+type OuterData struct {
+	Payload string `json:"payload"`
+}
+
+// AlertPayload represents the JSON structure of the `payload` field.
+type AlertPayload struct {
+	Timestamp   int64  `json:"timestamp"`
+	DeviceID    string `json:"device_id"`
+	PayloadType string `json:"payload_type"`
+	Data        struct {
+		AlertType    string  `json:"alert_type"`
+		Severity     string  `json:"severity"`
+		Message      string  `json:"message"`
+		CurrentValue float64 `json:"current_value"`
+	} `json:"data"`
+}
+
 type IiotAlertsConsumer struct {
-	client *kgo.Client
+	client  *kgo.Client
 	handler *iot.InsertAlertsCommandHandler
 }
 
@@ -81,11 +101,34 @@ func (c IiotAlertsConsumer) poll(ctx context.Context) {
 	})
 
 	r := fetches.Records()
-	
+
+	commands := make([]iot.InsertAlertsCommand, 0, len(r))
 	for _, rec := range r {
-		fmt.Printf("received message: topic=%s partition=%d offset=%d key=%s value=%s\n", rec.Topic, rec.Partition, rec.Offset, string(rec.Key), string(rec.Value))
+		var outer OuterData
+		if err := json.Unmarshal(rec.Value, &outer); err != nil {
+			fmt.Printf("error unmarshaling outer JSON: %v\n", err)
+			continue
+		}
+		
+		var alert AlertPayload
+		if err := json.Unmarshal([]byte(outer.Payload), &alert); err != nil {
+			fmt.Printf("error unmarshaling alert JSON: %v\n", err)
+			continue
+		}
+
+		commands = append(commands, iot.InsertAlertsCommand{
+			Time:      time.Unix(alert.Timestamp, 0).UTC(),
+			DeviceID:  alert.DeviceID,               // Replace with actual device ID from rec.Key or rec.Value
+			AlertType: alert.Data.AlertType, // Replace with actual alert type from rec.Value
+			Severity:  alert.Data.Severity,                // Replace with actual severity from rec.Value
+			Message:   alert.Data.Message,
+			CurrentValue: null.From(alert.Data.CurrentValue),
+		})
 	}
-	c.handler.Handle(ctx, )
+	if err := c.handler.Handle(ctx, commands...); err != nil {
+		fmt.Printf("error handling insert alerts command: %v\n", err)
+		return
+	}
 
 	c.client.MarkCommitRecords(r...)
 }
