@@ -41,7 +41,7 @@ services:
       - .env
     volumes:
       - ./backend/migrations:/db/migrations
-    # command: ["--wait", "up"]
+    command: ["--wait", "up"]
     # command: ["--wait", "--url", "${DATABASE_URL}", "down"]
     depends_on:
       timescaledb:

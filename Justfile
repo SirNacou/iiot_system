@@ -9,7 +9,7 @@ default:
     
 # Migration for backend
 dbmate *ARG:
-  docker run --rm -it --network=host -v "$(pwd)/db:/db" ghcr.io/amacneil/dbmate {{ARG}} -d "./backend/migrations/"
+  docker run --rm -it --network=host -v "$(pwd)/backend:/db" ghcr.io/amacneil/dbmate {{ARG}}
   
   
 up:
