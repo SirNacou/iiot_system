@@ -9,7 +9,7 @@ require (
 	github.com/jaswdr/faker/v2 v2.8.0
 	github.com/pkg/errors v0.9.1
 	github.com/shopspring/decimal v1.4.0
-	github.com/stephenafamo/bob v0.40.2
+	github.com/stephenafamo/bob v0.41.1
 	github.com/twmb/franz-go v1.19.5
 )
 

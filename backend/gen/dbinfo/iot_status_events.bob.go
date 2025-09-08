@@ -5,16 +5,16 @@ package dbinfo
 
 import "github.com/aarondl/opt/null"
 
-var IotAlertEvents = Table[
-	iotAlertEventColumns,
-	iotAlertEventIndexes,
-	iotAlertEventForeignKeys,
-	iotAlertEventUniques,
-	iotAlertEventChecks,
+var IotStatusEvents = Table[
+	iotStatusEventColumns,
+	iotStatusEventIndexes,
+	iotStatusEventForeignKeys,
+	iotStatusEventUniques,
+	iotStatusEventChecks,
 ]{
 	Schema: "",
-	Name:   "iot_alert_events",
-	Columns: iotAlertEventColumns{
+	Name:   "iot_status_events",
+	Columns: iotStatusEventColumns{
 		Time: column{
 			Name:      "time",
 			DBType:    "timestamp with time zone",
@@ -33,8 +33,8 @@ var IotAlertEvents = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		AlertType: column{
-			Name:      "alert_type",
+		OldStatus: column{
+			Name:      "old_status",
 			DBType:    "character varying",
 			Default:   "",
 			Comment:   "",
@@ -42,8 +42,8 @@ var IotAlertEvents = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Severity: column{
-			Name:      "severity",
+		NewStatus: column{
+			Name:      "new_status",
 			DBType:    "character varying",
 			Default:   "",
 			Comment:   "",
@@ -51,29 +51,20 @@ var IotAlertEvents = Table[
 			Generated: false,
 			AutoIncr:  false,
 		},
-		Message: column{
-			Name:      "message",
-			DBType:    "text",
+		Reason: column{
+			Name:      "reason",
+			DBType:    "character varying",
 			Default:   "",
 			Comment:   "",
 			Nullable:  false,
-			Generated: false,
-			AutoIncr:  false,
-		},
-		CurrentValue: column{
-			Name:      "current_value",
-			DBType:    "numeric",
-			Default:   "NULL",
-			Comment:   "",
-			Nullable:  true,
 			Generated: false,
 			AutoIncr:  false,
 		},
 	},
-	Indexes: iotAlertEventIndexes{
-		IotAlertEventsTimeIdx: index{
+	Indexes: iotStatusEventIndexes{
+		IotStatusEventsTimeIdx: index{
 			Type: "btree",
-			Name: "iot_alert_events_time_idx",
+			Name: "iot_status_events_time_idx",
 			Columns: []indexColumn{
 				{
 					Name:         "\"time\"",
@@ -93,45 +84,44 @@ var IotAlertEvents = Table[
 	Comment: "",
 }
 
-type iotAlertEventColumns struct {
-	Time         column
-	DeviceID     column
-	AlertType    column
-	Severity     column
-	Message      column
-	CurrentValue column
+type iotStatusEventColumns struct {
+	Time      column
+	DeviceID  column
+	OldStatus column
+	NewStatus column
+	Reason    column
 }
 
-func (c iotAlertEventColumns) AsSlice() []column {
+func (c iotStatusEventColumns) AsSlice() []column {
 	return []column{
-		c.Time, c.DeviceID, c.AlertType, c.Severity, c.Message, c.CurrentValue,
+		c.Time, c.DeviceID, c.OldStatus, c.NewStatus, c.Reason,
 	}
 }
 
-type iotAlertEventIndexes struct {
-	IotAlertEventsTimeIdx index
+type iotStatusEventIndexes struct {
+	IotStatusEventsTimeIdx index
 }
 
-func (i iotAlertEventIndexes) AsSlice() []index {
+func (i iotStatusEventIndexes) AsSlice() []index {
 	return []index{
-		i.IotAlertEventsTimeIdx,
+		i.IotStatusEventsTimeIdx,
 	}
 }
 
-type iotAlertEventForeignKeys struct{}
+type iotStatusEventForeignKeys struct{}
 
-func (f iotAlertEventForeignKeys) AsSlice() []foreignKey {
+func (f iotStatusEventForeignKeys) AsSlice() []foreignKey {
 	return []foreignKey{}
 }
 
-type iotAlertEventUniques struct{}
+type iotStatusEventUniques struct{}
 
-func (u iotAlertEventUniques) AsSlice() []constraint {
+func (u iotStatusEventUniques) AsSlice() []constraint {
 	return []constraint{}
 }
 
-type iotAlertEventChecks struct{}
+type iotStatusEventChecks struct{}
 
-func (c iotAlertEventChecks) AsSlice() []check {
+func (c iotStatusEventChecks) AsSlice() []check {
 	return []check{}
 }

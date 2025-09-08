@@ -2,25 +2,23 @@ package iot
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"iiot_system/backend/gen/models"
 
-	"github.com/aarondl/opt/null"
 	"github.com/stephenafamo/bob"
 	"github.com/stephenafamo/bob/dialect/psql"
-	"github.com/stephenafamo/bob/dialect/psql/dialect"
 	"github.com/stephenafamo/bob/dialect/psql/im"
 )
 
 type InsertProductionCommand struct {
-	Time         time.Time
-	DeviceID     string
-	AlertType    string
-	Severity     string
-	Message      string
-	CurrentValue null.Val[float64]
+	Time           time.Time
+	DeviceID       string
+	ProductionType string
+	ProductSku     string
+	UnitCount      int32
+	BatchID        string
+	QualityStatus  string
 }
 
 type InsertProductionCommandHandler struct {
@@ -47,28 +45,15 @@ func (h InsertProductionCommandHandler) Handle(ctx context.Context, command ...I
 	)
 
 	for _, v := range command {
-		val, exist := v.CurrentValue.Get()
-
-		var value bob.Mod[*dialect.InsertQuery]
-		if exist {
-			value = im.Values(
-				psql.Arg(v.Time,
-					v.DeviceID,
-					v.AlertType,
-					v.Severity,
-					v.Message,
-					val),
-			)
-		} else {
-			value = im.Values(
-				psql.Arg(v.Time,
-					v.DeviceID,
-					v.AlertType,
-					v.Severity,
-					v.Message,
-					nil),
-			)
-		}
+		value := im.Values(
+			psql.Arg(v.Time,
+				v.DeviceID,
+				v.ProductionType,
+				v.ProductSku,
+				v.UnitCount,
+				v.BatchID,
+				v.QualityStatus),
+		)
 
 		q.Apply(value)
 	}
@@ -78,19 +63,10 @@ func (h InsertProductionCommandHandler) Handle(ctx context.Context, command ...I
 		return err
 	}
 
-	r, err := t.ExecContext(ctx, query, args...)
+	_, err = t.ExecContext(ctx, query, args...)
 	if err != nil {
 		return err
 	}
 
-	t.Commit(ctx)
-
-	row, err := r.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Executed query: %s with args: %v, row: %v\n", query, args, row)
-
-	return err
+	return t.Commit(ctx)
 }
