@@ -7,10 +7,15 @@ default:
   @echo "You can also run specific tasks like 'just build' or 'just test'."
   @echo "To see all available recipes, run: just --list" # Suggest the explicit command
     
-# Migration for backend
+# Migration for backend with dbmate
 dbmate *ARG:
   docker run --rm -it --network=host -v "$(pwd)/backend:/db" ghcr.io/amacneil/dbmate {{ARG}}
   
   
+# Deploy docker
 up:
   docker compose up -d --build
+  
+# Run migration
+migrate:
+  docker compose run --rm dbmate

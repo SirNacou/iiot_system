@@ -1,8 +1,7 @@
-package iot
+package application_iot
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"iiot_system/backend/gen/models"
@@ -27,7 +26,7 @@ type InsertAlertsCommandHandler struct {
 	db bob.DB
 }
 
-func NewIiotAlertsCommandHandler(db bob.DB) *InsertAlertsCommandHandler {
+func NewInsertAlertsCommandHandler(db bob.DB) *InsertAlertsCommandHandler {
 	return &InsertAlertsCommandHandler{
 		db: db,
 	}
@@ -78,19 +77,15 @@ func (h InsertAlertsCommandHandler) Handle(ctx context.Context, command ...Inser
 		return err
 	}
 
-	r, err := t.ExecContext(ctx, query, args...)
+	_, err = t.ExecContext(ctx, query, args...)
 	if err != nil {
 		return err
 	}
 
-	t.Commit(ctx)
-
-	row, err := r.RowsAffected()
+	err = t.Commit(ctx)
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("Executed query: %s with args: %v, row: %v\n", query, args, row)
 
 	return err
 }

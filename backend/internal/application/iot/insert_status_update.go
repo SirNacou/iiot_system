@@ -11,27 +11,25 @@ import (
 	"github.com/stephenafamo/bob/dialect/psql/im"
 )
 
-type InsertProductionCommand struct {
-	Time           time.Time
-	DeviceID       string
-	ProductionType string
-	ProductSku     string
-	UnitCount      int32
-	BatchID        string
-	QualityStatus  string
+type InsertStatusUpdateCommand struct {
+	Time      time.Time
+	DeviceID  string
+	OldStatus string
+	NewStatus string
+	Reason    string
 }
 
-type InsertProductionCommandHandler struct {
+type InsertStatusUpdateCommandHandler struct {
 	db bob.DB
 }
 
-func NewInsertProductionCommandHandler(db bob.DB) *InsertProductionCommandHandler {
-	return &InsertProductionCommandHandler{
+func NewInsertStatusUpdateCommandHandler(db bob.DB) *InsertStatusUpdateCommandHandler {
+	return &InsertStatusUpdateCommandHandler{
 		db: db,
 	}
 }
 
-func (h InsertProductionCommandHandler) Handle(ctx context.Context, command ...InsertProductionCommand) error {
+func (h InsertStatusUpdateCommandHandler) Handle(ctx context.Context, command ...InsertStatusUpdateCommand) error {
 	if len(command) == 0 {
 		return nil
 	}
@@ -41,18 +39,16 @@ func (h InsertProductionCommandHandler) Handle(ctx context.Context, command ...I
 		return err
 	}
 	q := psql.Insert(
-		im.Into(models.IotProductionEvents.Name()),
+		im.Into(models.IotStatusEvents.Name()),
 	)
 
 	for _, v := range command {
 		value := im.Values(
 			psql.Arg(v.Time,
 				v.DeviceID,
-				v.ProductionType,
-				v.ProductSku,
-				v.UnitCount,
-				v.BatchID,
-				v.QualityStatus,
+				v.OldStatus,
+				v.NewStatus,
+				v.Reason,
 			),
 		)
 
@@ -69,5 +65,10 @@ func (h InsertProductionCommandHandler) Handle(ctx context.Context, command ...I
 		return err
 	}
 
-	return t.Commit(ctx)
+	err = t.Commit(ctx)
+	if err != nil {
+		return err
+	}
+
+	return err
 }

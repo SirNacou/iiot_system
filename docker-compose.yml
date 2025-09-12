@@ -8,8 +8,10 @@ services:
     ports:
       - 10011
     depends_on:
-      - kafka
-      - timescaledb
+      kafka:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
     env_file:
       - .env
     environment:

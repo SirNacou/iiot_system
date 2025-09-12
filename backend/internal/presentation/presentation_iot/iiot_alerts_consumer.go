@@ -1,20 +1,16 @@
-package iot
+package presentation_iot
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"time"
 
 	"iiot_system/backend/internal/application/iot"
+	"iiot_system/backend/internal/infrastructure/topics"
 
 	"github.com/aarondl/opt/null"
 	"github.com/twmb/franz-go/pkg/kgo"
-)
-
-const (
-	AlertsTopic = "iiot.alerts"
 )
 
 type outerData struct {
@@ -36,31 +32,23 @@ type AlertPayload struct {
 
 type IiotAlertsConsumer struct {
 	client  *kgo.Client
-	handler *iot.InsertAlertsCommandHandler
+	handler *application_iot.InsertAlertsCommandHandler
 }
 
-func NewIiotAlertConsumer(handler *iot.InsertAlertsCommandHandler, kafka *kgo.Client) (*IiotAlertsConsumer, error) {
+func NewIiotAlertConsumer(handler *application_iot.InsertAlertsCommandHandler, client *kgo.Client) (*IiotAlertsConsumer, error) {
 	c := &IiotAlertsConsumer{
 		handler: handler,
-		client:  kafka,
+		client:  client,
 	}
 
 	return c, nil
 }
 
-func (c IiotAlertsConsumer) Start(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	if err := c.client.Ping(ctx); err != nil {
-		fmt.Printf("unable to ping kafka: %v\n", err)
-		return
-	}
-
+func (c IiotAlertsConsumer) Start(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Println("shutting down iiot alerts consumer")
-			return
+			return fmt.Errorf("shutting down iiot alerts consumer")
 		default:
 			fmt.Printf("polling iiot alerts consumer\n")
 			c.poll(ctx)
@@ -85,9 +73,9 @@ func (c IiotAlertsConsumer) poll(ctx context.Context) {
 	r := fetches.Records()
 
 	var recordsToCommit []*kgo.Record
-	commands := make([]iot.InsertAlertsCommand, 0, len(r))
+	commands := make([]application_iot.InsertAlertsCommand, 0, len(r))
 	for _, rec := range r {
-		if rec.Topic == AlertsTopic {
+		if rec.Topic == topics.AlertsTopic {
 			var outer outerData
 			if err := json.Unmarshal(rec.Value, &outer); err != nil {
 				fmt.Printf("error unmarshaling outer JSON: %v\n", err)
@@ -100,7 +88,7 @@ func (c IiotAlertsConsumer) poll(ctx context.Context) {
 				continue
 			}
 
-			commands = append(commands, iot.InsertAlertsCommand{
+			commands = append(commands, application_iot.InsertAlertsCommand{
 				Time:         time.Unix(alert.Timestamp, 0).UTC(),
 				DeviceID:     alert.DeviceID,       // Replace with actual device ID from rec.Key or rec.Value
 				AlertType:    alert.Data.AlertType, // Replace with actual alert type from rec.Value
