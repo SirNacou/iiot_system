@@ -1,9 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router'
-import logo from '../logo.svg'
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import logo from "../logo.svg";
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute("/")({
   component: App,
-})
+  beforeLoad: () => {
+    throw redirect({
+      to: "/dashboard",
+    });
+  },
+});
 
 function App() {
   return (
@@ -35,5 +40,5 @@ function App() {
         </a>
       </header>
     </div>
-  )
+  );
 }

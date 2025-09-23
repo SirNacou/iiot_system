@@ -11,17 +11,35 @@
 import { createServerRootRoute } from '@tanstack/react-start/server'
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MainLayoutRouteImport } from './routes/_mainLayout'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MainLayoutDashboardRouteImport } from './routes/_mainLayout/dashboard'
+import { Route as MainLayoutAnalyticsRouteImport } from './routes/_mainLayout/analytics'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo.start.server-funcs'
 import { Route as DemoStartApiRequestRouteImport } from './routes/demo.start.api-request'
+import { Route as MainLayoutDeviceDeviceIdRouteImport } from './routes/_mainLayout/device.$deviceId'
 import { ServerRoute as ApiDemoNamesServerRouteImport } from './routes/api.demo-names'
 
 const rootServerRouteImport = createServerRootRoute()
 
+const MainLayoutRoute = MainLayoutRouteImport.update({
+  id: '/_mainLayout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const MainLayoutDashboardRoute = MainLayoutDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => MainLayoutRoute,
+} as any)
+const MainLayoutAnalyticsRoute = MainLayoutAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => MainLayoutRoute,
 } as any)
 const DemoStartServerFuncsRoute = DemoStartServerFuncsRouteImport.update({
   id: '/demo/start/server-funcs',
@@ -33,6 +51,12 @@ const DemoStartApiRequestRoute = DemoStartApiRequestRouteImport.update({
   path: '/demo/start/api-request',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MainLayoutDeviceDeviceIdRoute =
+  MainLayoutDeviceDeviceIdRouteImport.update({
+    id: '/device/$deviceId',
+    path: '/device/$deviceId',
+    getParentRoute: () => MainLayoutRoute,
+  } as any)
 const ApiDemoNamesServerRoute = ApiDemoNamesServerRouteImport.update({
   id: '/api/demo-names',
   path: '/api/demo-names',
@@ -41,30 +65,61 @@ const ApiDemoNamesServerRoute = ApiDemoNamesServerRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/analytics': typeof MainLayoutAnalyticsRoute
+  '/dashboard': typeof MainLayoutDashboardRoute
+  '/device/$deviceId': typeof MainLayoutDeviceDeviceIdRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/analytics': typeof MainLayoutAnalyticsRoute
+  '/dashboard': typeof MainLayoutDashboardRoute
+  '/device/$deviceId': typeof MainLayoutDeviceDeviceIdRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_mainLayout': typeof MainLayoutRouteWithChildren
+  '/_mainLayout/analytics': typeof MainLayoutAnalyticsRoute
+  '/_mainLayout/dashboard': typeof MainLayoutDashboardRoute
+  '/_mainLayout/device/$deviceId': typeof MainLayoutDeviceDeviceIdRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/demo/start/api-request' | '/demo/start/server-funcs'
+  fullPaths:
+    | '/'
+    | '/analytics'
+    | '/dashboard'
+    | '/device/$deviceId'
+    | '/demo/start/api-request'
+    | '/demo/start/server-funcs'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/demo/start/api-request' | '/demo/start/server-funcs'
-  id: '__root__' | '/' | '/demo/start/api-request' | '/demo/start/server-funcs'
+  to:
+    | '/'
+    | '/analytics'
+    | '/dashboard'
+    | '/device/$deviceId'
+    | '/demo/start/api-request'
+    | '/demo/start/server-funcs'
+  id:
+    | '__root__'
+    | '/'
+    | '/_mainLayout'
+    | '/_mainLayout/analytics'
+    | '/_mainLayout/dashboard'
+    | '/_mainLayout/device/$deviceId'
+    | '/demo/start/api-request'
+    | '/demo/start/server-funcs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MainLayoutRoute: typeof MainLayoutRouteWithChildren
   DemoStartApiRequestRoute: typeof DemoStartApiRequestRoute
   DemoStartServerFuncsRoute: typeof DemoStartServerFuncsRoute
 }
@@ -92,12 +147,33 @@ export interface RootServerRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_mainLayout': {
+      id: '/_mainLayout'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof MainLayoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_mainLayout/dashboard': {
+      id: '/_mainLayout/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof MainLayoutDashboardRouteImport
+      parentRoute: typeof MainLayoutRoute
+    }
+    '/_mainLayout/analytics': {
+      id: '/_mainLayout/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof MainLayoutAnalyticsRouteImport
+      parentRoute: typeof MainLayoutRoute
     }
     '/demo/start/server-funcs': {
       id: '/demo/start/server-funcs'
@@ -113,6 +189,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoStartApiRequestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_mainLayout/device/$deviceId': {
+      id: '/_mainLayout/device/$deviceId'
+      path: '/device/$deviceId'
+      fullPath: '/device/$deviceId'
+      preLoaderRoute: typeof MainLayoutDeviceDeviceIdRouteImport
+      parentRoute: typeof MainLayoutRoute
+    }
   }
 }
 declare module '@tanstack/react-start/server' {
@@ -127,8 +210,25 @@ declare module '@tanstack/react-start/server' {
   }
 }
 
+interface MainLayoutRouteChildren {
+  MainLayoutAnalyticsRoute: typeof MainLayoutAnalyticsRoute
+  MainLayoutDashboardRoute: typeof MainLayoutDashboardRoute
+  MainLayoutDeviceDeviceIdRoute: typeof MainLayoutDeviceDeviceIdRoute
+}
+
+const MainLayoutRouteChildren: MainLayoutRouteChildren = {
+  MainLayoutAnalyticsRoute: MainLayoutAnalyticsRoute,
+  MainLayoutDashboardRoute: MainLayoutDashboardRoute,
+  MainLayoutDeviceDeviceIdRoute: MainLayoutDeviceDeviceIdRoute,
+}
+
+const MainLayoutRouteWithChildren = MainLayoutRoute._addFileChildren(
+  MainLayoutRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MainLayoutRoute: MainLayoutRouteWithChildren,
   DemoStartApiRequestRoute: DemoStartApiRequestRoute,
   DemoStartServerFuncsRoute: DemoStartServerFuncsRoute,
 }
