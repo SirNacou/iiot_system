@@ -1,10 +1,10 @@
+import { MantineProvider } from "@mantine/core";
+import { TanstackDevtools } from "@tanstack/react-devtools";
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { TanstackDevtools } from "@tanstack/react-devtools";
-import { MantineProvider } from "@mantine/core";
 
-import Header from "../components/Header";
-
+import { shadcnCssVariableResolver } from "@/cssVariableResolver";
+import { shadcnTheme } from "@/theme";
 import "@mantine/core/styles.css";
 import appCss from "../styles.css?url";
 
@@ -40,7 +40,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <MantineProvider>{children}</MantineProvider>
+        <MantineProvider theme={shadcnTheme} cssVariablesResolver={shadcnCssVariableResolver}>
+          {children}
+        </MantineProvider>
         <TanstackDevtools
           config={{
             position: "bottom-left",
