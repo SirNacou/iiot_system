@@ -6,7 +6,7 @@ services:
     container_name: backend
     hostname: backend
     ports:
-      - 10011
+      - "10011:10011"
     depends_on:
       kafka:
         condition: service_healthy
@@ -70,8 +70,7 @@ services:
     env_file: .env
     restart: always
     healthcheck:
-      test:
-        ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -129,6 +128,21 @@ services:
       emqx:
         condition: service_healthy
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    hostname: frontend
+    ports:
+      - "10012:3000"
+    env_file:
+      - .env
+    environment:
+      - PORT=3000
+    depends_on:
+      - backend
+    restart: unless-stopped
 volumes:
   postgres-data:
   kafka-data:

@@ -5,8 +5,8 @@ Welcome to your new TanStack app!
 To run this application:
 
 ```bash
-bun install
-bunx --bun run start
+pnpm install
+pnpm start
 ```
 
 # Building For Production
@@ -14,7 +14,7 @@ bunx --bun run start
 To build this application for production:
 
 ```bash
-bunx --bun run build
+pnpm build
 ```
 
 ## Testing
@@ -22,12 +22,41 @@ bunx --bun run build
 This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
 
 ```bash
-bunx --bun run test
+pnpm test
 ```
 
 ## Styling
 
 This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+
+
+## Linting & Formatting
+
+This project uses [Biome](https://biomejs.dev/) for linting and formatting. The following scripts are available:
+
+
+```bash
+pnpm lint
+pnpm format
+pnpm check
+```
+
+
+## T3Env
+
+- You can use T3Env to add type safety to your environment variables.
+- Add Environment variables to the `src/env.mjs` file.
+- Use the environment variables in your code.
+
+### Usage
+
+```ts
+import { env } from "@/env";
+
+console.log(env.VITE_APP_TITLE);
+```
+
+
 
 
 
@@ -134,7 +163,7 @@ React-Query is an excellent addition or alternative to route loading and integra
 First add your dependencies:
 
 ```bash
-bun install @tanstack/react-query @tanstack/react-query-devtools
+pnpm add @tanstack/react-query @tanstack/react-query-devtools
 ```
 
 Next we'll need to create a query client and provider. We recommend putting those in `main.tsx`.
@@ -215,7 +244,7 @@ Another common requirement for React applications is state management. There are
 First you need to add TanStack Store as a dependency:
 
 ```bash
-bun install @tanstack/store
+pnpm add @tanstack/store
 ```
 
 Now let's create a simple counter in the `src/App.tsx` file as a demonstration.

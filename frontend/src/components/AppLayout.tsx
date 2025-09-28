@@ -1,7 +1,7 @@
 import { AppShell, Divider, NavLink, Text } from "@mantine/core";
 import { Link } from "@tanstack/react-router";
 import { Activity, BarChart3, Settings, Zap } from "lucide-react";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface AppLayoutProps {
   children: ReactNode;
