@@ -1,0 +1,45 @@
+services:
+  backend:
+    build:
+      context: backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend/:/app
+    restart: "always"
+
+  timescaledb:
+    ports:
+      - "10015:5432"
+
+  adminer:
+    profiles: []
+    ports:
+      - 10020:8080
+
+  kafka:
+    ports:
+      - "10006:9092"
+      - "10007:9101"
+
+  kafka-ui:
+    profiles: []
+    ports:
+      - "10008:8080"
+
+  emqx:
+    ports:
+      - "10000:1883"
+      - "10001:8083"
+      - "10002:8084"
+      - "10003:8883"
+      - "10004:18083"
+
+  device_simulator:
+    profiles: []
+
+  frontend:
+    ports:
+      - "10012:3000"
+
+  dbmate:
+    profiles: []

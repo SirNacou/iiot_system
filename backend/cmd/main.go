@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -17,6 +18,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/labstack/echo/v4"
 	"github.com/stephenafamo/bob"
 	"github.com/twmb/franz-go/pkg/kgo"
 )
@@ -87,43 +89,41 @@ func main() {
 		os.Exit(1)
 	}
 
+	e := echo.New()
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello, World!")
+	})
+
 	var wg sync.WaitGroup
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
+		e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", cfg.Port)))
+	})
+
+	wg.Go(func() {
 		err := iiotAlertsConsumer.Start(ctx)
 		if err != nil {
 			log.Fatal("Iiot alert consumer stopped with error", err)
 		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	})
+	wg.Go(func() {
 		err := iiotProductionConsumer.Start(ctx)
 		if err != nil {
 			log.Fatal("Iiot production consumer stopped with error", err)
 		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	})
+	wg.Go(func() {
 		err := iiotStatusUpdateConsumer.Start(ctx)
 		if err != nil {
 			log.Fatal("Iiot status update consumer stopped with error", err)
 		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	})
+	wg.Go(func() {
 		err := iiotTelemetryConsumer.Start(ctx)
 		if err != nil {
 			log.Fatal("Iiot telemetry consumer stopped with error", err)
 		}
-	}()
+	})
 
 	log.Println("Application is running. Press Ctrl+C to stop.")
 	<-ctx.Done()
